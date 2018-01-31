@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/Masterminds/semver"
@@ -139,8 +140,8 @@ func (p *packageCmd) run() error {
 		debug("Setting version to %s", p.version)
 	}
 
-	if filepath.Base(path) != ch.Metadata.Name {
-		return fmt.Errorf("directory name (%s) and Chart.yaml name (%s) must match", filepath.Base(path), ch.Metadata.Name)
+	if !strings.HasSuffix(path, ch.Metadata.Name) {
+		return fmt.Errorf("Chart.yaml name (%s) must be a suffix of directory name (%s)", ch.Metadata.Name, filepath.Dir(path))
 	}
 
 	if reqs, err := chartutil.LoadRequirements(ch); err == nil {

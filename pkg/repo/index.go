@@ -235,6 +235,7 @@ func IndexDirectory(dir, baseURL string) (*IndexFile, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	archives = append(archives, moreArchives...)
 
 	index := NewIndexFile()
@@ -254,12 +255,15 @@ func IndexDirectory(dir, baseURL string) (*IndexFile, error) {
 		c, err := chartutil.Load(arch)
 		if err != nil {
 			// Assume this is not a chart.
+			fmt.Printf("#### Error loading chart %q: %s\n", fname, err)
 			continue
 		}
+
 		hash, err := provenance.DigestFile(arch)
 		if err != nil {
 			return index, err
 		}
+
 		index.Add(c.Metadata, fname, parentURL, hash)
 	}
 	return index, nil

@@ -124,7 +124,7 @@ func LoadFiles(files []*BufferedFile) (*chart.Chart, error) {
 	subcharts := map[string][]*BufferedFile{}
 
 	for _, f := range files {
-		if f.Name == "Chart.yaml" {
+		if filepath.Base(f.Name) == "Chart.yaml" {
 			m, err := UnmarshalChartfile(f.Data)
 			if err != nil {
 				return c, err

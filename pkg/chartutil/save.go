@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ghodss/yaml"
 
@@ -145,14 +146,23 @@ func Save(c *chart.Chart, outDir string) (string, error) {
 		}
 	}()
 
-	if err := writeTarContents(twriter, c, ""); err != nil {
+	if err := writeTarContents(twriter, c, "", filepath.Dir(c.Metadata.Name)); err != nil {
 		rollback = true
 	}
 	return filename, err
 }
 
-func writeTarContents(out *tar.Writer, c *chart.Chart, prefix string) error {
-	base := filepath.Join(prefix, c.Metadata.Name)
+func writeTarContents(out *tar.Writer, c *chart.Chart, prefix string, relativePath string) error {
+    if !strings.HasPrefix(c.Metadata.Name, relativePath) {
+        return fmt.Errorf("%q is not a prefix of %q", relativePath, c.Metadata.Name)
+    }
+
+    trimmed, err := filepath.Rel(relativePath, c.Metadata.Name)
+    if err != nil {
+        return err
+    }
+
+	base := filepath.Join(prefix, trimmed)
 
 	// Save Chart.yaml
 	cdata, err := yaml.Marshal(c.Metadata)
@@ -188,7 +198,7 @@ func writeTarContents(out *tar.Writer, c *chart.Chart, prefix string) error {
 
 	// Save dependencies
 	for _, dep := range c.Dependencies {
-		if err := writeTarContents(out, dep, base+"/charts"); err != nil {
+		if err := writeTarContents(out, dep, base+"/charts", ""); err != nil {
 			return err
 		}
 	}
